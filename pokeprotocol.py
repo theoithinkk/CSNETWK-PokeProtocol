@@ -770,148 +770,137 @@ def run_gui(peer: PokePeer, pokedex: Dict[str, Pokemon], http_port: int, display
       box-sizing: border-box;
     }}
     body {{
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: Verdana, Geneva, sans-serif;
       margin: 0;
       padding: 0;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: #e8e8e8;
       min-height: 100vh;
     }}
     .layout {{
       display: grid;
-      grid-template-columns: 300px 1fr 350px;
-      grid-template-rows: auto 1fr 200px;
-      gap: 15px;
+      grid-template-columns: 280px 1fr 320px;
+      grid-template-rows: auto 1fr 180px;
+      gap: 10px;
       height: 100vh;
-      padding: 15px;
+      padding: 10px;
     }}
     .card {{
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      backdrop-filter: blur(10px);
-      border: 2px solid rgba(255,255,255,0.3);
+      border: 1px solid #d0d0d0;
     }}
     .card h2 {{
-      margin: 0 0 15px 0;
-      font-size: 18px;
+      margin: 0 0 10px 0;
+      font-size: 14px;
       font-weight: 700;
-      color: #2d3748;
+      color: #333;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #aaa;
     }}
     .pokemon-list {{
       flex: 1;
       overflow-y: auto;
-      border: 2px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 8px;
-      background: #f7fafc;
-      max-height: 400px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 4px;
+      background: #fff;
+      max-height: 420px;
     }}
     .pokemon-list::-webkit-scrollbar {{
-      width: 8px;
+      width: 6px;
     }}
     .pokemon-list::-webkit-scrollbar-track {{
-      background: #e2e8f0;
-      border-radius: 10px;
+      background: #f0f0f0;
     }}
     .pokemon-list::-webkit-scrollbar-thumb {{
-      background: #667eea;
-      border-radius: 10px;
+      background: #999;
+      border-radius: 3px;
     }}
     .pokemon-item {{
-      padding: 10px 12px;
-      border-radius: 10px;
+      padding: 6px 8px;
+      border-radius: 4px;
       cursor: pointer;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 14px;
-      margin-bottom: 6px;
-      transition: all 0.2s ease;
-      border: 2px solid transparent;
+      font-size: 12px;
+      margin-bottom: 2px;
+      transition: background 0.1s;
+      border: 1px solid transparent;
     }}
     .pokemon-item:hover {{
-      background: #edf2f7;
-      transform: translateX(4px);
-      border-color: #cbd5e0;
+      background: #e8f4f8;
+      border-color: #9fc5e8;
     }}
     .pokemon-item.selected {{
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: #6aa3d5;
       color: white;
       font-weight: 600;
-      border-color: #5a67d8;
-      box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+      border-color: #5890c0;
     }}
     .badge {{
-      border-radius: 999px;
-      padding: 4px 10px;
-      font-size: 11px;
-      background: rgba(255,255,255,0.3);
-      margin-left: 6px;
+      border-radius: 3px;
+      padding: 2px 6px;
+      font-size: 10px;
+      background: rgba(0,0,0,0.15);
+      margin-left: 4px;
       font-weight: 600;
       text-transform: uppercase;
     }}
     .pokemon-item.selected .badge {{
-      background: rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.25);
     }}
     .hp-bar {{
       width: 100%;
-      height: 24px;
-      background: #2d3748;
-      border-radius: 12px;
+      height: 18px;
+      background: #d8d8d8;
+      border-radius: 3px;
       overflow: hidden;
-      margin-top: 8px;
-      margin-bottom: 8px;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
-      position: relative;
+      margin-top: 6px;
+      margin-bottom: 6px;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+      border: 1px solid #aaa;
     }}
     .hp-fill {{
       height: 100%;
-      background: linear-gradient(90deg, #48bb78, #38a169);
-      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: inset 0 1px 2px rgba(255,255,255,0.3);
-      position: relative;
-    }}
-    .hp-fill::after {{
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 50%, rgba(0,0,0,0.1) 100%);
+      background: #5cb85c;
+      transition: width 0.4s ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.3);
     }}
     #chat-log {{
       flex: 1;
-      border: 1px solid #ddd;
-      border-radius: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
       overflow-y: auto;
-      padding: 4px;
-      font-size: 13px;
-      background: #fafbff;
+      padding: 6px;
+      font-size: 12px;
+      background: #fff;
     }}
     .chat-line {{
-      margin-bottom: 4px;
+      margin-bottom: 3px;
       word-wrap: break-word;
+      line-height: 1.4;
     }}
     .chat-sender {{
       font-weight: 600;
     }}
     #debug-log {{
       flex: 1;
-      border: 1px solid #ddd;
-      border-radius: 8px;
+      border: 1px solid #999;
+      border-radius: 4px;
       overflow-y: auto;
-      font-size: 11px;
-      background: #111827;
-      color: #e5e7eb;
-      padding: 4px;
-      font-family: "JetBrains Mono", monospace;
+      font-size: 10px;
+      background: #1a1a1a;
+      color: #d0d0d0;
+      padding: 6px;
+      font-family: "Courier New", monospace;
     }}
     .state-pill {{
       display: inline-flex;
@@ -933,121 +922,122 @@ def run_gui(peer: PokePeer, pokedex: Dict[str, Pokemon], http_port: int, display
       margin-left: 6px;
     }}
     button {{
-      border-radius: 12px;
-      border: none;
-      padding: 12px 24px;
-      font-size: 14px;
+      border-radius: 4px;
+      border: 1px solid #888;
+      padding: 8px 16px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: #fff;
-      transition: all 0.3s ease;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+      background: linear-gradient(to bottom, #fafafa 0%, #d0d0d0 100%);
+      color: #333;
+      transition: all 0.15s;
+      text-transform: none;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
     }}
     button:hover {{
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(102,126,234,0.6);
+      background: linear-gradient(to bottom, #fff 0%, #e0e0e0 100%);
+      border-color: #666;
     }}
     button:active {{
-      transform: translateY(0);
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
     }}
     button.secondary {{
-      background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
-      box-shadow: 0 4px 12px rgba(245,101,101,0.4);
+      background: linear-gradient(to bottom, #f5a5a5 0%, #e07070 100%);
+      border-color: #c55;
+      color: #fff;
+      text-shadow: 0 1px 1px rgba(0,0,0,0.2);
     }}
     button.secondary:hover {{
-      box-shadow: 0 6px 20px rgba(245,101,101,0.6);
+      background: linear-gradient(to bottom, #f7b5b5 0%, #e58080 100%);
     }}
     button.glow {{
-      box-shadow: 0 0 20px rgba(251,191,36,0.8), 0 4px 12px rgba(102,126,234,0.4);
-      animation: pulse 2s infinite;
+      box-shadow: 0 0 8px rgba(255,200,0,0.8), 0 1px 2px rgba(0,0,0,0.15);
+      animation: pulse 1.5s infinite;
     }}
     @keyframes pulse {{
-      0%, 100% {{ box-shadow: 0 0 20px rgba(251,191,36,0.8), 0 4px 12px rgba(102,126,234,0.4); }}
-      50% {{ box-shadow: 0 0 30px rgba(251,191,36,1), 0 6px 20px rgba(102,126,234,0.6); }}
+      0%, 100% {{ box-shadow: 0 0 8px rgba(255,200,0,0.8), 0 1px 2px rgba(0,0,0,0.15); }}
+      50% {{ box-shadow: 0 0 15px rgba(255,200,0,1), 0 1px 3px rgba(0,0,0,0.2); }}
     }}
     button.toggled {{
-      background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
-      box-shadow: 0 6px 20px rgba(246,173,85,0.6);
+      background: linear-gradient(to bottom, #f7c080 0%, #e5a060 100%);
+      border-color: #c80;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
     }}
     input, textarea {{
-      font-size: 14px;
-      padding: 10px 14px;
-      border-radius: 10px;
-      border: 2px solid #e2e8f0;
+      font-size: 12px;
+      padding: 6px 8px;
+      border-radius: 3px;
+      border: 1px solid #ccc;
       width: 100%;
-      transition: all 0.2s ease;
-      background: #f7fafc;
+      transition: border-color 0.15s;
+      background: #fff;
     }}
     input:focus, textarea:focus {{
       outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
-      background: white;
+      border-color: #6aa3d5;
+      box-shadow: 0 0 0 2px rgba(106,163,213,0.2);
     }}
     .row {{
       display: flex;
-      gap: 10px;
+      gap: 6px;
       align-items: center;
-      margin-top: 10px;
+      margin-top: 8px;
     }}
     .row > * {{
       flex: 1;
     }}
     .small {{
-      font-size: 12px;
-      color: #718096;
-      font-weight: 500;
+      font-size: 11px;
+      color: #666;
+      font-weight: normal;
     }}
     .spectator-hide {{
       display: none !important;
     }}
     /* Battle Status Styling */
     .battle-status-card {{
-      background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(237,242,247,0.98) 100%);
+      background: #fafafa;
     }}
     .state-pill {{
       display: inline-flex;
       align-items: center;
-      padding: 6px 16px;
-      border-radius: 999px;
-      font-size: 13px;
-      font-weight: 700;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 4px 12px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #6aa3d5;
       color: white;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      box-shadow: 0 2px 8px rgba(102,126,234,0.4);
+      letter-spacing: 0.3px;
+      border: 1px solid #5890c0;
     }}
     .turn-pill {{
       display: inline-flex;
       align-items: center;
-      padding: 6px 16px;
-      border-radius: 999px;
-      font-size: 13px;
-      font-weight: 700;
-      background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+      padding: 4px 12px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #5cb85c;
       color: white;
-      margin-left: 10px;
+      margin-left: 8px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      box-shadow: 0 2px 8px rgba(72,187,120,0.4);
+      letter-spacing: 0.3px;
+      border: 1px solid #4a9d4a;
     }}
     .pokemon-display {{
-      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-      padding: 16px;
-      border-radius: 12px;
-      border: 2px solid #e2e8f0;
-      margin-top: 12px;
+      background: #fff;
+      padding: 12px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      margin-top: 10px;
     }}
     .pokemon-name {{
-      font-size: 20px;
+      font-size: 16px;
       font-weight: 700;
-      color: #2d3748;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      color: #333;
+      text-transform: none;
+      letter-spacing: 0;
     }}
     /* Spectator-specific layout */
     body.spectator-mode .layout {{
@@ -1072,7 +1062,7 @@ def run_gui(peer: PokePeer, pokedex: Dict[str, Pokemon], http_port: int, display
   <div class="layout">
     <!-- Left: Pokémon chooser -->
     <div class="card spectator-only-hide" style="grid-row: 1 / span 2;">
-      <h2>🎮 Choose Pokémon</h2>
+      <h2>Choose Pokémon</h2>
       <div class="row">
         <input id="search" placeholder="Search by name or type..." />
       </div>
@@ -1081,7 +1071,7 @@ def run_gui(peer: PokePeer, pokedex: Dict[str, Pokemon], http_port: int, display
         Selected: <span id="selected-pokemon-label">None</span>
       </div>
       <div class="row" style="margin-top:15px;">
-        <button id="btn-setup" style="width: 100%;">✨ Ready to Battle</button>
+        <button id="btn-setup" style="width: 100%;">Ready to Battle</button>
       </div>
       <div class="small" style="margin-top: 10px; text-align: center;">
         <b>{peer.role.value.upper()}</b> | {display_name}
@@ -1090,7 +1080,7 @@ def run_gui(peer: PokePeer, pokedex: Dict[str, Pokemon], http_port: int, display
 
     <!-- Middle top: battle status -->
     <div class="card battle-status-card" style="grid-column: 2; grid-row: 1 / span 2;">
-      <h2>⚔️ Battle Arena</h2>
+      <h2>Battle Status</h2>
       <div id="state-row" style="margin-bottom: 20px;">
         <span class="state-pill" id="state-pill">SETUP</span>
         <span class="turn-pill" id="turn-pill">Waiting…</span>
@@ -1115,19 +1105,19 @@ def run_gui(peer: PokePeer, pokedex: Dict[str, Pokemon], http_port: int, display
 
     <!-- Right top: attack controls -->
     <div class="card spectator-only-hide" style="grid-column: 3; grid-row: 1;">
-      <h2>⚡ Actions</h2>
+      <h2>Actions</h2>
       <div class="row">
         <input id="move-name" placeholder="Move name..." style="flex: 2;" />
       </div>
       <div class="row">
-        <button id="btn-attack" style="width: 100%;">🎯 Attack</button>
+        <button id="btn-attack" style="width: 100%;">Attack</button>
       </div>
       <div class="row">
         <button id="btn-special-atk" class="secondary" style="flex: 1;">
-          💥 Sp.ATK (<span id="special-atk-count">5</span>)
+          Sp.ATK (<span id="special-atk-count">5</span>)
         </button>
         <button id="btn-special-def" class="secondary" style="flex: 1;">
-          🛡️ Sp.DEF (<span id="special-def-count">5</span>)
+          Sp.DEF (<span id="special-def-count">5</span>)
         </button>
       </div>
       <div class="small" style="margin-top: 15px; text-align: center;">
@@ -1137,7 +1127,7 @@ def run_gui(peer: PokePeer, pokedex: Dict[str, Pokemon], http_port: int, display
 
     <!-- Right bottom: chat -->
     <div class="card chat-card" style="grid-column: 3; grid-row: 2;">
-      <h2>💬 Chat & Stickers</h2>
+      <h2>Chat & Stickers</h2>
       <div id="chat-log"></div>
       <div class="row" style="margin-top:6px;">
         <input id="chat-input" placeholder="Type a message..." />
@@ -1154,7 +1144,7 @@ def run_gui(peer: PokePeer, pokedex: Dict[str, Pokemon], http_port: int, display
 
     <!-- Bottom: debug -->
     <div class="card debug-card" style="grid-column: 1 / span 3; grid-row: 3;">
-      <h2>🔍 Debug Log</h2>
+      <h2>Debug Log</h2>
       <div id="debug-log"></div>
     </div>
   </div>
