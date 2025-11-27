@@ -220,6 +220,7 @@ class PokePeer:
         remote_port: Optional[int] = None,
         seed: Optional[int] = None,
         on_debug: Optional[Callable[[str], None]] = None,
+        on_chat: Optional[Callable[[Dict[str, str]], None]] = None,
     ):
         self.role = role
         self.udp_port = udp_port
@@ -228,6 +229,7 @@ class PokePeer:
         )
         self.seed = seed
         self._debug_cb = on_debug or print
+        self._chat_cb = on_chat or (lambda x: None)
 
         # UDP socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -256,6 +258,10 @@ class PokePeer:
 
     def debug(self, msg: str) -> None:
         self._debug_cb(msg)
+
+    def chat(self, fields: Dict[str, str]) -> None:
+        """Emit chat message to GUI"""
+        self._chat_cb(fields)
 
     # ---------- sequence helper ----------
 
@@ -472,6 +478,9 @@ class PokePeer:
         else:
             self.debug(f"[CHAT] ({sender_name}) [UNKNOWN CONTENT_TYPE={content_type}]")
 
+        # Emit chat message to GUI
+        self.chat(fields)
+
         if self.role == Role.HOST:
             self._broadcast_to_spectators(fields)
 
@@ -631,6 +640,9 @@ class PokePeer:
             "content_type": "TEXT",
             "message_text": text,
         }
+        # Show the message in sender's own GUI
+        self.chat(fields)
+
         if self.role == Role.HOST:
             self.host_broadcast(fields)
         else:
@@ -648,6 +660,9 @@ class PokePeer:
             "content_type": "STICKER",
             "sticker_data": b64,
         }
+        # Show the sticker in sender's own GUI
+        self.chat(fields)
+
         if self.role == Role.HOST:
             self.host_broadcast(fields)
         else:
@@ -693,7 +708,12 @@ def run_gui(peer: PokePeer, pokedex: Dict[str, Pokemon], http_port: int, display
         print(msg)
         socketio.emit("debug_log", {"line": msg})
 
+    def gui_chat(fields: Dict[str, str]):
+        """Emit chat messages to the GUI"""
+        socketio.emit("chat", fields)
+
     peer._debug_cb = gui_debug
+    peer._chat_cb = gui_chat
 
     @app.route("/")
     def index():
