@@ -486,7 +486,14 @@ class PokePeer:
         self.chat(fields)
 
         if self.role == Role.HOST:
-            self._broadcast_to_spectators(fields)
+            # If message is from a spectator, broadcast to everyone (joiner + spectators)
+            # If message is from joiner, only broadcast to spectators (joiner already showed it)
+            if addr in self.spectators:
+                # From spectator - broadcast to joiner and all spectators
+                self.host_broadcast(fields)
+            else:
+                # From joiner - only broadcast to spectators
+                self._broadcast_to_spectators(fields)
 
     def _broadcast_to_spectators(self, fields: Dict[str, str]) -> None:
         if self.role != Role.HOST or not self.spectators:
@@ -893,12 +900,15 @@ def run_gui(peer: PokePeer, pokedex: Dict[str, Pokemon], http_port: int, display
       font-size: 11px;
       color: #6b7280;
     }}
+    .spectator-hide {{
+      display: none !important;
+    }}
   </style>
 </head>
 <body>
   <div class="layout">
     <!-- Left: Pokémon chooser -->
-    <div class="card" style="grid-row: 1 / span 3;">
+    <div class="card spectator-only-hide" style="grid-row: 1 / span 3;">
       <h2>1. Choose Pokémon</h2>
       <div class="row">
         <input id="search" placeholder="Search by name or type..." />
@@ -941,7 +951,7 @@ def run_gui(peer: PokePeer, pokedex: Dict[str, Pokemon], http_port: int, display
     </div>
 
     <!-- Middle bottom: attack controls -->
-    <div class="card" style="grid-row: 2 / span 1;">
+    <div class="card spectator-only-hide" style="grid-row: 2 / span 1;">
       <h2>3. Attack & Boosts</h2>
       <div class="row">
         <input id="move-name" placeholder="Enter move name (just a label)" />
@@ -986,6 +996,16 @@ def run_gui(peer: PokePeer, pokedex: Dict[str, Pokemon], http_port: int, display
 
   <script>
     const socket = io();
+    const MY_ROLE = '{peer.role.value}';
+
+    // Hide battle controls for spectators
+    if (MY_ROLE === 'spectator') {{
+      document.addEventListener('DOMContentLoaded', () => {{
+        document.querySelectorAll('.spectator-only-hide').forEach(el => {{
+          el.classList.add('spectator-hide');
+        }});
+      }});
+    }}
 
     function appendChat(line, isSticker=false, stickerData=null) {{
       const chat = document.getElementById('chat-log');
@@ -1213,6 +1233,9 @@ def run_gui(peer: PokePeer, pokedex: Dict[str, Pokemon], http_port: int, display
 
     @socketio.on("choose_pokemon")
     def _on_choose_pokemon(payload):
+        if peer.role == Role.SPECTATOR:
+            gui_debug("[GUI] Spectators cannot choose Pokémon")
+            return
         name = (payload or {}).get("name", "")
         p = pokedex.get(name.lower())
         if not p:
@@ -1223,11 +1246,17 @@ def run_gui(peer: PokePeer, pokedex: Dict[str, Pokemon], http_port: int, display
 
     @socketio.on("send_battle_setup")
     def _on_send_battle_setup():
+        if peer.role == Role.SPECTATOR:
+            gui_debug("[GUI] Spectators cannot send battle setup")
+            return
         peer.send_battle_setup()
         gui_debug("[GUI] BATTLE_SETUP sent")
 
     @socketio.on("attack")
     def _on_attack(payload):
+        if peer.role == Role.SPECTATOR:
+            gui_debug("[GUI] Spectators cannot attack")
+            return
         move_name = (payload or {}).get("move_name", "Attack")
         sa = bool((payload or {}).get("special_attack", False))
         sd = bool((payload or {}).get("special_defense", False))
