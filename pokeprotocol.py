@@ -422,6 +422,10 @@ class PokePeer:
         except Exception as e:
             self.debug(f"[ERROR] Failed to parse BATTLE_SETUP: {e}")
 
+        # Forward BATTLE_SETUP to spectators so they can see the battle state
+        if self.role == Role.HOST:
+            self._broadcast_to_spectators(fields)
+
     def _handle_attack_announce(self, fields: Dict[str, str], addr: Tuple[str, int]) -> None:
         move_name = fields.get("move_name", "Unknown Move")
         self.last_move_name = move_name
@@ -539,8 +543,11 @@ class PokePeer:
             "stat_boosts": json.dumps(boosts),
             "pokemon": json.dumps(p_dict),
         }
-        # RFC example: BATTLE_SETUP usually no seq; we add one for convenience
-        self._send_with_seq(fields, self.remote_addr)
+        # Send to opponent and spectators (if host)
+        if self.role == Role.HOST:
+            self.host_broadcast(fields)
+        else:
+            self._send_with_seq(fields, self.remote_addr)
 
     def announce_attack(
         self,
@@ -640,8 +647,9 @@ class PokePeer:
             "content_type": "TEXT",
             "message_text": text,
         }
-        # Show the message in sender's own GUI
-        self.chat(fields)
+        # Show the message in sender's own GUI (but not for spectators - they'll receive it back from host)
+        if self.role != Role.SPECTATOR:
+            self.chat(fields)
 
         if self.role == Role.HOST:
             self.host_broadcast(fields)
@@ -660,8 +668,9 @@ class PokePeer:
             "content_type": "STICKER",
             "sticker_data": b64,
         }
-        # Show the sticker in sender's own GUI
-        self.chat(fields)
+        # Show the sticker in sender's own GUI (but not for spectators - they'll receive it back from host)
+        if self.role != Role.SPECTATOR:
+            self.chat(fields)
 
         if self.role == Role.HOST:
             self.host_broadcast(fields)
