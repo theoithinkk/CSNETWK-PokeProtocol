@@ -249,6 +249,7 @@ class PokePeer:
         self.communication_mode: str = "P2P"
         self.is_my_turn: bool = False
         self.last_move_name: str = ""
+        self.battle_setup_sent: bool = False
 
         # Threading
         self.running = False
@@ -406,19 +407,37 @@ class PokePeer:
                 special_attack_uses=int(boosts_parsed.get("special_attack_uses", 5)),
                 special_defense_uses=int(boosts_parsed.get("special_defense_uses", 5)),
             )
-            self.opponent_side = BattleSide(pokemon=p, current_hp=p.hp, stat_boosts=boosts)
-            self.debug(
-                f"[STATE] Opponent Pokémon: {p.name} ({p.type1}/{p.type2}), "
-                f"HP={p.hp}, atk={p.attack}, sp_atk={p.sp_attack}, "
-                f"def={p.defense}, sp_def={p.sp_defense}"
-            )
-            if self.state == GameState.SETUP and self.my_side is not None:
-                self.state = GameState.WAITING_FOR_MOVE
-                if self.role == Role.HOST:
-                    self.is_my_turn = True
-                else:
-                    self.is_my_turn = False
-                self.debug(f"[STATE] Battle ready. My turn? {self.is_my_turn}")
+            # For spectators: use my_side for first pokemon, opponent_side for second
+            # For host/joiner: opponent_side is the other player's pokemon
+            if self.role == Role.SPECTATOR:
+                if self.my_side is None:
+                    self.my_side = BattleSide(pokemon=p, current_hp=p.hp, stat_boosts=boosts)
+                    self.debug(f"[STATE] Player 1 Pokémon: {p.name} ({p.type1}/{p.type2}), HP={p.hp}")
+                elif self.opponent_side is None:
+                    self.opponent_side = BattleSide(pokemon=p, current_hp=p.hp, stat_boosts=boosts)
+                    self.debug(f"[STATE] Player 2 Pokémon: {p.name} ({p.type1}/{p.type2}), HP={p.hp}")
+            else:
+                self.opponent_side = BattleSide(pokemon=p, current_hp=p.hp, stat_boosts=boosts)
+                self.debug(
+                    f"[STATE] Opponent Pokémon: {p.name} ({p.type1}/{p.type2}), "
+                    f"HP={p.hp}, atk={p.attack}, sp_atk={p.sp_attack}, "
+                    f"def={p.defense}, sp_def={p.sp_defense}"
+                )
+            # Transition to battle ready state
+            if self.state == GameState.SETUP:
+                # For spectators: wait for both pokemon
+                if self.role == Role.SPECTATOR:
+                    if self.my_side is not None and self.opponent_side is not None:
+                        self.state = GameState.WAITING_FOR_MOVE
+                        self.debug("[STATE] Battle ready (spectator view)")
+                # For host/joiner: need own pokemon and opponent's
+                elif self.my_side is not None:
+                    self.state = GameState.WAITING_FOR_MOVE
+                    if self.role == Role.HOST:
+                        self.is_my_turn = True
+                    else:
+                        self.is_my_turn = False
+                    self.debug(f"[STATE] Battle ready. My turn? {self.is_my_turn}")
         except Exception as e:
             self.debug(f"[ERROR] Failed to parse BATTLE_SETUP: {e}")
 
@@ -519,6 +538,9 @@ class PokePeer:
         self._send_raw(encode_message(fields), self.remote_addr)
 
     def send_battle_setup(self) -> None:
+        if self.battle_setup_sent:
+            self.debug("[WARN] BATTLE_SETUP already sent. Cannot send again.")
+            return
         if not self.remote_addr:
             self.debug("[WARN] Tried to send BATTLE_SETUP but remote_addr is not set yet.")
             return
@@ -555,6 +577,9 @@ class PokePeer:
             self.host_broadcast(fields)
         else:
             self._send_with_seq(fields, self.remote_addr)
+
+        # Mark that battle setup has been sent
+        self.battle_setup_sent = True
 
     def announce_attack(
         self,
@@ -903,6 +928,23 @@ def run_gui(peer: PokePeer, pokedex: Dict[str, Pokemon], http_port: int, display
     .spectator-hide {{
       display: none !important;
     }}
+    /* Spectator-specific layout */
+    body.spectator-mode .layout {{
+      grid-template-columns: 1.5fr 1fr;
+      grid-template-rows: auto auto;
+    }}
+    body.spectator-mode .battle-status-card {{
+      grid-column: 1;
+      grid-row: 1 / span 2;
+    }}
+    body.spectator-mode .chat-card {{
+      grid-column: 2;
+      grid-row: 1;
+    }}
+    body.spectator-mode .debug-card {{
+      grid-column: 2;
+      grid-row: 2;
+    }}
   </style>
 </head>
 <body>
@@ -926,7 +968,7 @@ def run_gui(peer: PokePeer, pokedex: Dict[str, Pokemon], http_port: int, display
     </div>
 
     <!-- Middle top: battle status -->
-    <div class="card" style="grid-row: 1 / span 1;">
+    <div class="card battle-status-card" style="grid-row: 1 / span 1;">
       <h2>2. Battle Status</h2>
       <div id="state-row" class="small">
         <span class="state-pill" id="state-pill">SETUP</span>
@@ -971,7 +1013,7 @@ def run_gui(peer: PokePeer, pokedex: Dict[str, Pokemon], http_port: int, display
     </div>
 
     <!-- Right: chat -->
-    <div class="card" style="grid-column: 3; grid-row: 1 / span 2;">
+    <div class="card chat-card" style="grid-column: 3; grid-row: 1 / span 2;">
       <h2>4. Chat & Stickers</h2>
       <div id="chat-log"></div>
       <div class="row" style="margin-top:6px;">
@@ -988,7 +1030,7 @@ def run_gui(peer: PokePeer, pokedex: Dict[str, Pokemon], http_port: int, display
     </div>
 
     <!-- Bottom: debug -->
-    <div class="card" style="grid-column: 2 / span 2; grid-row: 3;">
+    <div class="card debug-card" style="grid-column: 2 / span 2; grid-row: 3;">
       <h2>5. Debug (terminal mirror)</h2>
       <div id="debug-log"></div>
     </div>
@@ -998,8 +1040,9 @@ def run_gui(peer: PokePeer, pokedex: Dict[str, Pokemon], http_port: int, display
     const socket = io();
     const MY_ROLE = '{peer.role.value}';
 
-    // Hide battle controls for spectators
+    // Hide battle controls for spectators and apply spectator layout
     if (MY_ROLE === 'spectator') {{
+      document.body.classList.add('spectator-mode');
       document.addEventListener('DOMContentLoaded', () => {{
         document.querySelectorAll('.spectator-only-hide').forEach(el => {{
           el.classList.add('spectator-hide');
