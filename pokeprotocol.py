@@ -1055,10 +1055,71 @@ def run_gui(peer: PokePeer, pokedex: Dict[str, Pokemon], http_port: int, display
     body.spectator-mode .debug-card {{
       grid-column: 2;
       grid-row: 2;
+      max-height: 200px;
+    }}
+    /* Game Over Modal */
+    .game-over-modal {{
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }}
+    .game-over-modal.show {{
+      display: flex;
+    }}
+    .game-over-content {{
+      background: #fff;
+      padding: 40px 60px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      animation: slideDown 0.3s ease;
+    }}
+    @keyframes slideDown {{
+      from {{
+        transform: translateY(-50px);
+        opacity: 0;
+      }}
+      to {{
+        transform: translateY(0);
+        opacity: 1;
+      }}
+    }}
+    .game-over-title {{
+      font-size: 32px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }}
+    .game-over-winner {{
+      font-size: 24px;
+      font-weight: 600;
+      color: #5cb85c;
+      margin-bottom: 10px;
+    }}
+    .game-over-loser {{
+      font-size: 18px;
+      color: #999;
     }}
   </style>
 </head>
 <body>
+  <!-- Game Over Modal -->
+  <div id="game-over-modal" class="game-over-modal">
+    <div class="game-over-content">
+      <div class="game-over-title">Battle Complete!</div>
+      <div class="game-over-winner" id="game-over-winner">Winner: ???</div>
+      <div class="game-over-loser" id="game-over-loser">Loser: ???</div>
+    </div>
+  </div>
+
   <div class="layout">
     <!-- Left: Pokémon chooser -->
     <div class="card spectator-only-hide" style="grid-row: 1 / span 2;">
@@ -1233,11 +1294,40 @@ def run_gui(peer: PokePeer, pokedex: Dict[str, Pokemon], http_port: int, display
         (s.my_special_attack_uses == null ? '-' : s.my_special_attack_uses);
       document.getElementById('special-def-count').textContent =
         (s.my_special_defense_uses == null ? '-' : s.my_special_defense_uses);
+
+      // Check for game over and show modal
+      if (s.state === 'GAME_OVER') {{
+        const modal = document.getElementById('game-over-modal');
+        const winnerEl = document.getElementById('game-over-winner');
+        const loserEl = document.getElementById('game-over-loser');
+
+        // Determine winner based on HP
+        let winner = '???';
+        let loser = '???';
+        if (s.my_hp > 0 && s.opp_hp <= 0) {{
+          winner = s.my_pokemon || 'You';
+          loser = s.opp_pokemon || 'Opponent';
+        }} else if (s.opp_hp > 0 && s.my_hp <= 0) {{
+          winner = s.opp_pokemon || 'Opponent';
+          loser = s.my_pokemon || 'You';
+        }}
+
+        winnerEl.textContent = 'Winner: ' + winner;
+        loserEl.textContent = 'Loser: ' + loser;
+        modal.classList.add('show');
+      }}
     }});
 
     setInterval(() => {{
       socket.emit('request_state');
     }}, 400);
+
+    // Game over modal click handler to close
+    document.getElementById('game-over-modal').addEventListener('click', (e) => {{
+      if (e.target.id === 'game-over-modal') {{
+        e.target.classList.remove('show');
+      }}
+    }});
 
     // Pokémon list rendering & search
     const selected = {{ name: null }};
